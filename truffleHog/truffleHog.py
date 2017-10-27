@@ -10,6 +10,7 @@ import tempfile
 import os
 import json
 import stat
+import re
 from git import Repo
 
 def main():
@@ -24,6 +25,8 @@ def main():
 
 BASE64_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
 HEX_CHARS = "1234567890abcdefABCDEF"
+md5_pattern = re.compile("[a-f0-9]{32}")
+sha1_pattern = re.compile("[a-f0-9]{40}")
 
 def del_rw(action, name, exc):
     os.chmod(name, stat.S_IWRITE)
@@ -136,11 +139,19 @@ def find_strings(git_url, printJson=False):
                             for string in base64_strings:
                                 b64Entropy = shannon_entropy(string, BASE64_CHARS)
                                 if b64Entropy > 4.5:
+                                    if md5_pattern.match(string):
+                                        continue
+                                    if sha1_pattern.match(string):
+                                        continue
                                     stringsFound.append(string)
                                     printableDiff = printableDiff.replace(string, bcolors.WARNING + string + bcolors.ENDC)
                             for string in hex_strings:
                                 hexEntropy = shannon_entropy(string, HEX_CHARS)
                                 if hexEntropy > 3:
+                                    if md5_pattern.match(string):
+                                        continue
+                                    if sha1_pattern.match(string):
+                                        continue
                                     stringsFound.append(string)
                                     printableDiff = printableDiff.replace(string, bcolors.WARNING + string + bcolors.ENDC)
                     if len(stringsFound) > 0:
